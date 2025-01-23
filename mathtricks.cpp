@@ -248,11 +248,26 @@ void printField(square field[][mMaxSize],player &s_player1,player &s_player2, ui
     for (uint8 i = mZero; i < rows; i++) {
         for (uint8 j = mZero; j < cols; j++) {
             if (i == s_player1.playerX && j == s_player1.playerY) {
-                std::cout << "[" << s_player1.score << "] ";
+                std::cout << "[" << s_player1.color << s_player1.score << "\033[0m" << "] ";
             } else if (i == s_player2.playerX && j == s_player2.playerY) {
-                std::cout << "[" << s_player2.score << "] ";
+                std::cout << "[" << s_player2.color << s_player2.score << "\033[0m" << "] ";
             } else {
-                std::cout << "[" << field[i][j].val[mZero] << field[i][j].val[mOne] << "] ";
+                if(field[i][j].hasPassed == true)
+                {
+                    if(field[i][j].playerOnePassed == true)
+                    {
+                        std::cout << "[" << s_player1.color << field[i][j].val[mZero] << field[i][j].val[mOne] << "\033[0m" << "] ";
+                        std::cout << field[i][j].playerOnePassed;
+                    }
+                    else
+                    {
+                        std::cout << "[" << s_player2.color << field[i][j].val[mZero] << field[i][j].val[mOne] << "\033[0m" << "] ";
+                    }
+                }
+                else
+                {
+                    std::cout << "[" << field[i][j].val[mZero] << field[i][j].val[mOne] << "] ";
+                }
             }
         }
         std::cout << '\n';
@@ -319,7 +334,7 @@ Parameters:                                                                     
 Return type:                                                                                                                           //
 - bool: Returns true if the move was successful, otherwise returns false.                                                              //
 ---------------------------------------------------------------------------------------------------------------------------------------*/
-bool movePlayer(square field[][mMaxSize],player &s_player, uint8 rows, uint8 cols, const char c_direction[mForTwo], bool &isGameOver)
+bool movePlayer(square field[][mMaxSize],player &s_player, uint8 rows, uint8 cols, const char c_direction[mForTwo], bool &isGameOver,bool b_isFirst)
 {
     uint8 newRow = s_player.playerX;
     uint8 newCol = s_player.playerY;
@@ -392,8 +407,15 @@ bool movePlayer(square field[][mMaxSize],player &s_player, uint8 rows, uint8 col
         default:
             break;
     }
-
     // Display player's score on the new square
+    if(b_isFirst == true)
+    {
+        targetSquare.playerOnePassed == true;
+    }
+    else
+    {
+        targetSquare.playerOnePassed == false;
+    } 
     if(s_player.score < mTens)
     {
         targetSquare.val[mZero] = s_player.score - '0';
@@ -403,6 +425,7 @@ bool movePlayer(square field[][mMaxSize],player &s_player, uint8 rows, uint8 col
         targetSquare.val[mZero] = (s_player.score / mTens) - '0';
     }  // Mark as score cell
     targetSquare.val[mOne] = (s_player.score < mTens) ? '0' : ' ';
+    std::cout << "\033[0m";
     return true;
 }
 
@@ -452,7 +475,7 @@ void gameStart(square field[][mMaxSize],player &s_player1,player &s_player2, uin
                 {
                     if(b_isGameOver != true)
                     {
-                        if(movePlayer(field, s_player1, u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver) == true)
+                        if(movePlayer(field, s_player1, u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver,b_isFirst) == true)
                         {
                             field[s_player1.playerX][s_player1.playerY].hasPassed = true;
                             break;
@@ -467,7 +490,7 @@ void gameStart(square field[][mMaxSize],player &s_player1,player &s_player2, uin
                 {
                     if(b_isGameOver != true)
                     {
-                        if(movePlayer(field,s_player1, u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver) == true)
+                        if(movePlayer(field,s_player1, u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver,b_isFirst) == true)
                         {
                             field[s_player1.playerX][s_player1.playerY].hasPassed = true;
                             break;
@@ -496,7 +519,7 @@ void gameStart(square field[][mMaxSize],player &s_player1,player &s_player2, uin
                 {
                     if(b_isGameOver != true)
                     {    
-                        if(movePlayer(field, s_player2,u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver) == true)
+                        if(movePlayer(field, s_player2,u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver,b_isFirst) == true)
                         {
                             field[s_player2.playerX][s_player2.playerY].hasPassed = true;
                             break;
@@ -512,7 +535,7 @@ void gameStart(square field[][mMaxSize],player &s_player1,player &s_player2, uin
                 {
                     if(b_isGameOver != true)
                     {
-                        if(movePlayer(field,s_player2, u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver) == true)
+                        if(movePlayer(field,s_player2, u8_rowsForCreation, u8_colsForCreation, c_direction, b_isGameOver,b_isFirst) == true)
                         {
                             break;
                         }
@@ -553,6 +576,7 @@ int main() {
 
     int n = 0, m = 0;
     player s_player1;
+    s_player1 = {0, 0, 0.0, "\033[34m"};
 
     std::cout << "Enter the size of the matrix: ";
     std::cin >> n >> m;
@@ -562,11 +586,10 @@ int main() {
         std::cin >> n >> m;
     }
     fieldChecker(n,m);
-
     player s_player2;
     s_player2.playerX = n - 1;
     s_player2.playerY = m - 1;
-
+    s_player2.color = "\033[31m";
     bool b_isFirst = true;
     bool b_isGameOver = false;
     char c_direction[mForTwo];
